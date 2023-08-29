@@ -10,6 +10,8 @@
 #define ledRoja 12
 #define ledAmarillo 26
 #define ledVerde 14
+#define canalServo 4
+
 int ledSelec = 0;
 
 // Sensor
@@ -30,11 +32,6 @@ int ledSelec = 0;
 #define G 4
 #define DP 2
 
-#define FreqPWM 50 // Frecuencia en Hz
-#define canalServo 4
-#define resolucion 8 // Resolución de 8 bits
-
-
 bool botonEstado = false;
 bool ultimobotonEstado = false;
 unsigned long ultimotiempoRebote = 0;
@@ -42,11 +39,16 @@ unsigned long retrasoRebote = 50;
 unsigned long tiempo = 0; 
 
 float temperatura = 0.0;
-float dutyCycle = 0;
 int decenas = 0; 
 int unidades = 0;
 int decimales = 0;
 int valor = 0; 
+
+//Definiendo las configuracioens del PWM para el motor y las leds
+#define resolucionPWM 8
+#define FreqPWM 50
+float cicloTrabajo = 0; 
+
 
 void desplegar7seg(uint8_t digito);
 void mostrarTemperatura(float temp);
@@ -58,7 +60,7 @@ void setup() {
 
   // Configurar el servo
   pinMode(servo, OUTPUT);
-  ledcSetup(canalServo, FreqPWM, resolucion); // Resolución: 8 bits
+  ledcSetup(canalServo, FreqPWM, resolucionPWM);
   ledcAttachPin(servo, canalServo);
 
   // Configurar el botón
@@ -274,26 +276,35 @@ void presionBoton() {
   if (tempC >= -50.0) {
     tempC = (valorCrudo * 3.3 / 4095.0) * 100.0; // Nueva fórmula de conversión para temperaturas positivas
   }
-  float dutyCycle = map(tempC, -50, 37, 0, 255);
-
   if (tempC < 37.0) {
     analogWrite(ledVerde, 255);
     analogWrite(ledAmarillo, 0);
     analogWrite(ledRoja, 0);
-    dutyCycle = map(tempC, -50, 37, 0, 255);
+    ledcAttachPin(ledVerde, canalServo);
+    cicloTrabajo = 8.8;//es igual a 30°
+    delay(5);
+    ledcWrite(canalServo, cicloTrabajo);
+
   } else if (tempC >= 37.0 && tempC < 37.5) {
     analogWrite(ledVerde, 0);
     analogWrite(ledAmarillo, 255);
     analogWrite(ledRoja, 0);
-    dutyCycle = map(tempC, 37, 37.5, 255, 1023);
+    ledcAttachPin(ledAmarillo, canalServo);
+    cicloTrabajo = 17.5; //es igual a 90°
+    delay(5);
+    ledcWrite(canalServo, cicloTrabajo);
+
   } else {
     analogWrite(ledVerde, 0);
     analogWrite(ledAmarillo, 0);
     analogWrite(ledRoja, 255);
-    dutyCycle = map(tempC, 37.5, 100, 1023, 2047);
+    ledcAttachPin(ledRoja, canalServo);
+    cicloTrabajo = 26.3; //es igual a 90°
+    delay(5);
+    ledcWrite(canalServo, cicloTrabajo);
+
   }
   // Aplicar el ciclo de trabajo al servo utilizando ledcWrite()
-  ledcWrite(canalServo, dutyCycle);
   Serial.print("Temperatura (˚C): ");
   Serial.println(tempC);
   
