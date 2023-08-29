@@ -1,6 +1,7 @@
 // Librerias
 #include <Arduino.h>
 #include "driver/ledc.h"
+#include "config.h"
 
 // Definición de pines
 #define servo 25 // PWM para el servo
