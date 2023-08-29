@@ -298,6 +298,12 @@ void presionBoton() {
   if (tempC >= -50.0) {
     tempC = (valorCrudo * 3.3 / 4095.0) * 100.0; // Nueva fórmula de conversión para temperaturas positivas
   }
+  // Aplicar restricciones en el rango de temperaturas
+  if (tempC < 20.0) {
+    tempC = 20.0;
+  } else if (tempC > 38.0) {
+    tempC = 38.0;
+  }
   if (tempC < 37.0) {
     cicloTrabajo = 8.8;//es igual a 30°
     ledcWrite(canalServo, cicloTrabajo);
