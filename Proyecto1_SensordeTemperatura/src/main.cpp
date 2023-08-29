@@ -277,22 +277,22 @@ void presionBoton() {
     tempC = (valorCrudo * 3.3 / 4095.0) * 100.0; // Nueva fórmula de conversión para temperaturas positivas
   }
   if (tempC < 37.0) {
+    cicloTrabajo = 8.8;//es igual a 30°
+    ledcWrite(canalServo, cicloTrabajo);
+    ledcAttachPin(ledVerde, canalServo);
     analogWrite(ledVerde, 255);
     analogWrite(ledAmarillo, 0);
     analogWrite(ledRoja, 0);
-    ledcAttachPin(ledVerde, canalServo);
-    cicloTrabajo = 8.8;//es igual a 30°
-    delay(5);
-    ledcWrite(canalServo, cicloTrabajo);
+
 
   } else if (tempC >= 37.0 && tempC < 37.5) {
+    ledcAttachPin(ledAmarillo, canalServo);
+    cicloTrabajo = 17.5; //es igual a 90°
+    ledcWrite(canalServo, cicloTrabajo);
     analogWrite(ledVerde, 0);
     analogWrite(ledAmarillo, 255);
     analogWrite(ledRoja, 0);
-    ledcAttachPin(ledAmarillo, canalServo);
-    cicloTrabajo = 17.5; //es igual a 90°
-    delay(5);
-    ledcWrite(canalServo, cicloTrabajo);
+
 
   } else {
     analogWrite(ledVerde, 0);
@@ -300,7 +300,6 @@ void presionBoton() {
     analogWrite(ledRoja, 255);
     ledcAttachPin(ledRoja, canalServo);
     cicloTrabajo = 26.3; //es igual a 90°
-    delay(5);
     ledcWrite(canalServo, cicloTrabajo);
 
   }
