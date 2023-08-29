@@ -1,13 +1,13 @@
-// Librerias
+//******************************* Librerias *******************************
 #include <Arduino.h>
 #include "driver/ledc.h"
 //#include "config.h"
 
-// Definición de pines
+//******************************* Definición de pines *******************************
 #define servo 25 // PWM para el servo
 #define buttonPin 15 // pin para el botón
 
-// LEDs
+//******************************* LEDs *******************************
 #define ledRoja 12
 #define ledAmarillo 26
 #define ledVerde 14
@@ -15,15 +15,15 @@
 
 int ledSelec = 0;
 
-// Sensor
+//******************************* Sensor *******************************
 #define LM35 34 // Pin para el sensor
 
-// Pines para los 4 digitos del display
+//******************************* Pines para los 4 digitos del display *******************************
 #define D1 13
 #define D2 33
 #define D3 32
 
-// Pines para los segmento del display
+//******************************* Pines para los segmento del display *******************************
 #define A 21
 #define B 19
 #define C 18
@@ -33,20 +33,20 @@ int ledSelec = 0;
 #define G 4
 #define DP 2
 
+// ******************************* Variables Globales *******************************
 bool botonEstado = false;
 bool ultimobotonEstado = false;
 bool estado = false;
 unsigned long ultimotiempoRebote = 0;
 unsigned long retrasoRebote = 50;
 unsigned long tiempo = 0; 
-
 float temperatura = 0.0;
 int decenas = 0; 
 int unidades = 0;
 int decimales = 0;
 int valor = 0; 
 
-//Definiendo las configuracioens del PWM para el motor y las leds
+//*************** Definiendo las configuracioens del PWM para el motor y las LEDs ***************
 #define resolucionPWM 8
 #define FreqPWM 50
 float cicloTrabajo = 0; 
@@ -58,6 +58,7 @@ void presionBoton();
 
 //AdafruitIO_Feed *tempcanal = io.feed("tempcanal");
 
+//******************************* void setup *******************************
 void setup() {
   Serial.begin(115200);
   /*while (!Serial);
@@ -76,20 +77,20 @@ void setup() {
   Serial.println(io.statusText());
   estado = false;*/
 
-  // Configurar el servo
+  //******************************* Configurar el servo *******************************
   pinMode(servo, OUTPUT);
   ledcSetup(canalServo, FreqPWM, resolucionPWM);
   ledcAttachPin(servo, canalServo);
 
-  // Configurar el botón
+  //******************************* Configurar el botón *******************************
   pinMode(buttonPin, INPUT_PULLUP);
 
-  // Configurar los LEDs
+  //******************************* Configurar los LEDs *******************************
   pinMode(ledVerde, OUTPUT);
   pinMode(ledAmarillo, OUTPUT);
   pinMode(ledRoja, OUTPUT);
 
-  // Configurar pines para los segmentos del display de 7 segmentos
+  //*************** Configurar pines para los segmentos del display de 7 segmentos ***************
   pinMode(A, OUTPUT);
   pinMode(B, OUTPUT);
   pinMode(C, OUTPUT);
@@ -99,7 +100,7 @@ void setup() {
   pinMode(G, OUTPUT);
   pinMode(DP, OUTPUT);
   
-  // Configurar pines para el display de 4 dígitos de 7 segmentos
+ //*************** Configurar pines de los digitos para el display de 4 dígitos de 7 segmentos ***************
   pinMode(D1, OUTPUT);
   pinMode(D2, OUTPUT);
   pinMode(D3, OUTPUT);
@@ -107,6 +108,7 @@ void setup() {
   //Serial.print("Connecting to Adafruit IO...");
 }
 
+//******************************* void loop *******************************
 void loop() {
   //io.run();
 
@@ -257,6 +259,7 @@ void desplegar7seg(uint8_t digito) {
   }
 }
 
+//******************************* void mostrarTemperatura *******************************
 void mostrarTemperatura(float temp) {
   temperatura = temp; // Asignar la temperatura recibida a la variable global
   
@@ -285,6 +288,7 @@ void mostrarTemperatura(float temp) {
   delay(5);
 }
 
+//******************************* void presionBoton *******************************
 void presionBoton() {
   int valorCrudo = analogRead(LM35);
   float tempC = (valorCrudo * 3.3 / 4095.0 - 0.5) * 100.0; // Fórmula de conversión
@@ -312,7 +316,6 @@ void presionBoton() {
     analogWrite(ledAmarillo, 0);
     analogWrite(ledRoja, 0);
 
-
   } else if (tempC >= 37.0 && tempC < 37.5) {
     ledcAttachPin(ledAmarillo, canalServo);
     cicloTrabajo = 17.5; //es igual a 90°
@@ -321,7 +324,6 @@ void presionBoton() {
     analogWrite(ledAmarillo, 255);
     analogWrite(ledRoja, 0);
 
-
   } else {
     analogWrite(ledVerde, 0);
     analogWrite(ledAmarillo, 0);
@@ -329,8 +331,8 @@ void presionBoton() {
     ledcAttachPin(ledRoja, canalServo);
     cicloTrabajo = 26.3; //es igual a 90°
     ledcWrite(canalServo, cicloTrabajo);
-
   }
+  
   // Aplicar el ciclo de trabajo al servo utilizando ledcWrite()
   Serial.print("Temperatura (˚C): ");
   Serial.println(tempC);
@@ -338,7 +340,7 @@ void presionBoton() {
   
   mostrarTemperatura(tempC);
 }
-
+//******************************* void handleMessage (para Adafruit IO) *******************************
 /*void handleMessage(AdafruitIO_Data *data) {
   Serial.print("Received <- ");
   Serial.println(data->value());
