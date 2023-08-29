@@ -1,8 +1,9 @@
 // Librerias
 #include <Arduino.h>
+#include "driver/ledc.h"
 
 // Definición de pines
-#define servoPin 25 // PWM para el servo
+#define servo 25 // PWM para el servo
 #define buttonPin 15 // pin para el botón
 
 // LEDs
@@ -29,8 +30,10 @@ int ledSelec = 0;
 #define G 4
 #define DP 2
 
-const int FreqPWM = 50; // Frecuencia en Hz
-const int canalServo = 0; 
+#define FreqPWM 50 // Frecuencia en Hz
+#define canalServo 4
+#define resolucion 8 // Resolución de 8 bits
+
 
 bool botonEstado = false;
 bool ultimobotonEstado = false;
@@ -39,6 +42,7 @@ unsigned long retrasoRebote = 50;
 unsigned long tiempo = 0; 
 
 float temperatura = 0.0;
+float dutyCycle = 0;
 int decenas = 0; 
 int unidades = 0;
 int decimales = 0;
@@ -53,9 +57,9 @@ void setup() {
   while (!Serial);
 
   // Configurar el servo
-  pinMode(servoPin, OUTPUT);
-  ledcSetup(canalServo, FreqPWM, 8); // Resolución: 8 bits
-  ledcAttachPin(servoPin, canalServo);
+  pinMode(servo, OUTPUT);
+  ledcSetup(canalServo, FreqPWM, resolucion); // Resolución: 8 bits
+  ledcAttachPin(servo, canalServo);
 
   // Configurar el botón
   pinMode(buttonPin, INPUT_PULLUP);
@@ -260,7 +264,6 @@ void mostrarTemperatura(float temp) {
 void presionBoton() {
   int valorCrudo = analogRead(LM35);
   float tempC = (valorCrudo * 3.3 / 4095.0 - 0.5) * 100.0; // Fórmula de conversión
-  int angulo = 0;
 
   Serial.print("Valor Crudo: ");
   Serial.println(valorCrudo);
@@ -271,34 +274,28 @@ void presionBoton() {
   if (tempC >= -50.0) {
     tempC = (valorCrudo * 3.3 / 4095.0) * 100.0; // Nueva fórmula de conversión para temperaturas positivas
   }
-  // Determinar el ángulo según la temperatura
+  float dutyCycle = map(tempC, -50, 37, 0, 255);
+
   if (tempC < 37.0) {
     analogWrite(ledVerde, 255);
     analogWrite(ledAmarillo, 0);
     analogWrite(ledRoja, 0);
-    angulo = 0; // Establecer ángulo en 0°
-  } else if (tempC >= 36.0 && tempC < 37.5) {
+    dutyCycle = map(tempC, -50, 37, 0, 255);
+  } else if (tempC >= 37.0 && tempC < 37.5) {
     analogWrite(ledVerde, 0);
     analogWrite(ledAmarillo, 255);
     analogWrite(ledRoja, 0);
-    angulo = 90; // Establecer ángulo en 90°
+    dutyCycle = map(tempC, 37, 37.5, 255, 1023);
   } else {
     analogWrite(ledVerde, 0);
     analogWrite(ledAmarillo, 0);
     analogWrite(ledRoja, 255);
-    angulo = 180; // Establecer ángulo en 180°
+    dutyCycle = map(tempC, 37.5, 100, 1023, 2047);
   }
-
+  // Aplicar el ciclo de trabajo al servo utilizando ledcWrite()
+  ledcWrite(canalServo, dutyCycle);
   Serial.print("Temperatura (˚C): ");
   Serial.println(tempC);
-
-  // Mapear el ángulo al ciclo de trabajo PWM según el ángulo deseado
-  int cicloTrabajo = map(angulo, 0, 180, 102, 716); // Mapear 0-180° al rango de ciclo de trabajo PWM
-
-  // Establecer ciclo de trabajo PWM para el control del servo
-  ledcWrite(canalServo, cicloTrabajo);
-
-  // Mostrar temperatura en el display de 4 dígitos de 7 segmentos
+  
   mostrarTemperatura(tempC);
-
 }
