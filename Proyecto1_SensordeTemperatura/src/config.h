@@ -1,11 +1,13 @@
-/************************ Adafruit IO Config *******************************
+///************************************************************************
+// POR RAZONES DE SEGURIDAD, NO PUBLIQUE ESTE CÓDIGO CON MIS CLAVES, SIN EMBARGO APARECERA CON MIS CLAVES EN LA ENTREGA
+/******************************* Adafruit IO Config *******************************
 
 // visit io.adafruit.com if you need to create an account,
 // or if you need your Adafruit IO key.
 #define IO_USERNAME  "usuario"
 #define IO_KEY       "llave"
 
-//******************************* WIFI **************************************
+//******************************* WIFI *******************************
 
 #define WIFI_SSID "wifi"
 #define WIFI_PASS "clave"
