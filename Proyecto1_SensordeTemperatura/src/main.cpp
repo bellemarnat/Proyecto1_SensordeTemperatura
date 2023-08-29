@@ -1,7 +1,7 @@
 //******************************* Librerias *******************************
 #include <Arduino.h>
 #include "driver/ledc.h"
-//#include "config.h"
+#include "config.h"
 
 //******************************* Definición de pines *******************************
 #define servo 25 // PWM para el servo
@@ -51,17 +51,17 @@ int valor = 0;
 #define FreqPWM 50
 float cicloTrabajo = 0; 
 
-//void handleMessage(AdafruitIO_Data *data);
+void handleMessage(AdafruitIO_Data *data);
 void desplegar7seg(uint8_t digito);
 void mostrarTemperatura(float temp);
 void presionBoton();
 
-//AdafruitIO_Feed *tempcanal = io.feed("tempcanal");
+AdafruitIO_Feed *tempcanal = io.feed("tempcanal");
 
 //******************************* void setup *******************************
 void setup() {
   Serial.begin(115200);
-  /*while (!Serial);
+  while (!Serial);
   Serial.print("Connecting to Adafruit IO");
   io.connect();
   tempcanal->onMessage(handleMessage);
@@ -75,7 +75,7 @@ void setup() {
   // Successful connection
   Serial.println();
   Serial.println(io.statusText());
-  estado = false;*/
+  estado = false;
 
   //******************************* Configurar el servo *******************************
   pinMode(servo, OUTPUT);
@@ -105,12 +105,12 @@ void setup() {
   pinMode(D2, OUTPUT);
   pinMode(D3, OUTPUT);
 
-  //Serial.print("Connecting to Adafruit IO...");
+  Serial.print("Connecting to Adafruit IO...");
 }
 
 //******************************* void loop *******************************
 void loop() {
-  //io.run();
+  io.run();
 
   // Leer el estado del botón y aplicar debounce
   int lectura = digitalRead(buttonPin);
@@ -336,12 +336,12 @@ void presionBoton() {
   // Aplicar el ciclo de trabajo al servo utilizando ledcWrite()
   Serial.print("Temperatura (˚C): ");
   Serial.println(tempC);
-  //tempcanal->save(tempC);
+  tempcanal->save(tempC);
   
   mostrarTemperatura(tempC);
 }
 //******************************* void handleMessage (para Adafruit IO) *******************************
-/*void handleMessage(AdafruitIO_Data *data) {
+void handleMessage(AdafruitIO_Data *data) {
   Serial.print("Received <- ");
   Serial.println(data->value());
 
@@ -350,4 +350,4 @@ void presionBoton() {
   } else {
     estado = false;
   }
-}*/
+}
