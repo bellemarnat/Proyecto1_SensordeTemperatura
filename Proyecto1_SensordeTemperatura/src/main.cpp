@@ -4,14 +4,13 @@
 #include "config.h"
 
 //******************************* Definición de pines *******************************
-#define servo 25 // PWM para el servo
+#define servo 35 // PWM para el servo
 #define buttonPin 15 // pin para el botón
 
 //******************************* LEDs *******************************
 #define ledRoja 12
 #define ledAmarillo 26
 #define ledVerde 14
-#define canalServo 4
 
 int ledSelec = 0;
 
@@ -25,32 +24,36 @@ int ledSelec = 0;
 
 //******************************* Pines para los segmento del display *******************************
 #define A 21
-#define B 19
+#define B 22
 #define C 18
 #define D 5
 #define E 17
 #define f 16
 #define G 4
-#define DP 2
+#define DP 25
 
 // ******************************* Variables Globales *******************************
 bool botonEstado = false;
 bool ultimobotonEstado = false;
 bool estado = false;
+
 unsigned long ultimotiempoRebote = 0;
 unsigned long retrasoRebote = 50;
 unsigned long tiempo = 0; 
+
 float temperatura = 0.0;
+
 int decenas = 0; 
 int unidades = 0;
 int decimales = 0;
 int valor = 0; 
 
 //*************** Definiendo las configuracioens del PWM para el motor y las LEDs ***************
-#define resolucionPWM 8
-#define FreqPWM 50
-float cicloTrabajo = 0; 
+#define pwmChannel 0  
+const int pwmMin = 77;
+const int pwmMax = 255;
 
+//******************************* voids *******************************
 void handleMessage(AdafruitIO_Data *data);
 void desplegar7seg(uint8_t digito);
 void mostrarTemperatura(float temp);
@@ -79,8 +82,8 @@ void setup() {
 
   //******************************* Configurar el servo *******************************
   pinMode(servo, OUTPUT);
-  ledcSetup(canalServo, FreqPWM, resolucionPWM);
-  ledcAttachPin(servo, canalServo);
+  ledcSetup(pwmChannel, 50, 10);
+  ledcAttachPin(servo, pwmChannel);
 
   //******************************* Configurar el botón *******************************
   pinMode(buttonPin, INPUT_PULLUP);
@@ -110,7 +113,7 @@ void setup() {
 
 //******************************* void loop *******************************
 void loop() {
-  io.run();
+  
 
   // Leer el estado del botón y aplicar debounce
   int lectura = digitalRead(buttonPin);
@@ -119,13 +122,14 @@ void loop() {
   }
   if ((millis() - ultimotiempoRebote) > retrasoRebote) {
     if (lectura != botonEstado) {
+
       botonEstado = lectura;
       if (botonEstado == LOW) {
+        io.run();
         presionBoton();
       }
     }
   }
-
   // Mostrar la parte de las decenas de la parte entera en el primer dígito
   desplegar7seg(D1);
   digitalWrite(D1, HIGH); // Activar primer dígito
@@ -156,8 +160,10 @@ void loop() {
   while (millis()< tiempo +5);
   
   ultimobotonEstado = lectura;
+  
 }
 
+//******************************* void desplegar7seg *******************************
 void desplegar7seg(uint8_t digito) {
   decenas = temperatura/10;
   unidades = temperatura - decenas*10;
@@ -269,23 +275,23 @@ void mostrarTemperatura(float temp) {
   digitalWrite(D2, LOW);
   digitalWrite(D3, LOW);
   desplegar7seg(decenas);
-  delay(5);
-  
+  delay (5);
+
   desplegar7seg(D2);
   digitalWrite(DP, HIGH);
   digitalWrite(D1, LOW);
   digitalWrite(D2, HIGH);
   digitalWrite(D3, LOW);
   desplegar7seg(unidades);
-  delay(5);
-  
+  delay (5);
+
   desplegar7seg(D3);
   digitalWrite(DP, LOW);
   digitalWrite(D1, LOW);
   digitalWrite(D2, LOW);
   digitalWrite(D3, HIGH);
   desplegar7seg(decimales);
-  delay(5);
+  delay (5);
 }
 
 //******************************* void presionBoton *******************************
@@ -309,28 +315,30 @@ void presionBoton() {
     tempC = 38.0;
   }
   if (tempC < 37.0) {
-    cicloTrabajo = 8.8;//es igual a 30°
-    ledcWrite(canalServo, cicloTrabajo);
-    ledcAttachPin(ledVerde, canalServo);
+    ledcAttachPin(ledVerde, pwmChannel);
     analogWrite(ledVerde, 255);
     analogWrite(ledAmarillo, 0);
     analogWrite(ledRoja, 0);
+    int dutyCycle = map(180, 0, 180, 26, 123); // mueve el servo a 180º
+    ledcWrite(pwmChannel, dutyCycle);
+    delay(5); // debounce
 
   } else if (tempC >= 37.0 && tempC < 37.5) {
-    ledcAttachPin(ledAmarillo, canalServo);
-    cicloTrabajo = 17.5; //es igual a 90°
-    ledcWrite(canalServo, cicloTrabajo);
+    ledcAttachPin(ledAmarillo, pwmChannel);
     analogWrite(ledVerde, 0);
     analogWrite(ledAmarillo, 255);
     analogWrite(ledRoja, 0);
+    int dutyCycle = map(180, 0, 180, 26, 123); // mueve el servo a 180º
+    ledcWrite(pwmChannel, dutyCycle);
+    delay(5); // debounce
 
   } else {
     analogWrite(ledVerde, 0);
     analogWrite(ledAmarillo, 0);
     analogWrite(ledRoja, 255);
-    ledcAttachPin(ledRoja, canalServo);
-    cicloTrabajo = 26.3; //es igual a 90°
-    ledcWrite(canalServo, cicloTrabajo);
+    int dutyCycle = map(180, 0, 180, 26, 123); // mueve el servo a 180º
+    ledcWrite(pwmChannel, dutyCycle);
+    delay(5); // debounce
   }
   
   // Aplicar el ciclo de trabajo al servo utilizando ledcWrite()
